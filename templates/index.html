@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fitness Buddy — AI-Powered Personal Coach</title>
+
+  <!-- Bootstrap 5.3 -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Marked.js (markdown rendering) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- ====================================================================
+     NAVBAR
+===================================================================== -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="mainNav">
+  <div class="container-fluid px-3">
+    <!-- Brand -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+      <div class="brand-icon"><i class="bi bi-fire"></i></div>
+      <span class="brand-text">Fitness<span class="accent">Buddy</span></span>
+    </a>
+
+    <!-- Mobile toggle -->
+    <button class="navbar-toggler border-0" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Nav links -->
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="showSection('chat')">
+            <i class="bi bi-chat-dots me-1"></i>AI Coach
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="showSection('workout')">
+            <i class="bi bi-activity me-1"></i>Workouts
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="showSection('nutrition')">
+            <i class="bi bi-egg-fried me-1"></i>Nutrition
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="showSection('tools')">
+            <i class="bi bi-calculator me-1"></i>Tools
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="showSection('habits')">
+            <i class="bi bi-check2-circle me-1"></i>Habits
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="showSection('profile')">
+            <i class="bi bi-person-circle me-1"></i>Profile
+          </a>
+        </li>
+      </ul>
+
+      <!-- Dark mode toggle -->
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-sm theme-toggle" id="themeToggle" onclick="toggleTheme()">
+          <i class="bi bi-moon-stars-fill"></i>
+        </button>
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span class="status-text">AI Active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ====================================================================
+     HERO BANNER (shown on first load)
+===================================================================== -->
+<div id="heroBanner" class="hero-banner">
+  <div class="hero-content text-center">
+    <div class="hero-icon animate-bounce">
+      <i class="bi bi-fire"></i>
+    </div>
+    <h1 class="hero-title">Your AI Fitness Buddy</h1>
+    <p class="hero-subtitle">
+      Powered by <strong>IBM Granite</strong> &amp; <strong>watsonx.ai</strong><br/>
+      Personalized workouts · Indian meal plans · Habit tracking
+    </p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+      <button class="btn btn-primary btn-lg px-5" onclick="showSection('profile')">
+        <i class="bi bi-person-plus me-2"></i>Get Started
+      </button>
+      <button class="btn btn-outline-light btn-lg px-5" onclick="showSection('chat')">
+        <i class="bi bi-chat-dots me-2"></i>Chat with FitBot
+      </button>
+    </div>
+
+    <!-- Feature chips -->
+    <div class="hero-chips mt-5">
+      <span class="chip"><i class="bi bi-activity"></i> Home Workouts</span>
+      <span class="chip"><i class="bi bi-egg-fried"></i> Indian Meal Plans</span>
+      <span class="chip"><i class="bi bi-calculator"></i> BMI & Calories</span>
+      <span class="chip"><i class="bi bi-bar-chart"></i> Progress Charts</span>
+      <span class="chip"><i class="bi bi-heart-pulse"></i> Habit Tracking</span>
+      <span class="chip"><i class="bi bi-lightbulb"></i> Daily Tips</span>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================
+     MAIN CONTENT
+===================================================================== -->
+<main class="container-fluid px-3 py-4" id="mainContent" style="display:none">
+
+  <!-- ================================================================
+       SECTION: DASHBOARD
+  ================================================================= -->
+  <section id="section-dashboard" class="section active-section">
+    <div class="section-header mb-4">
+      <h2 class="section-title"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+      <p class="text-muted">Your fitness overview at a glance</p>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="row g-3 mb-4" id="statCards">
+      <div class="col-6 col-lg-3">
+        <div class="stat-card animate-fadein" style="--delay:0.1s">
+          <div class="stat-icon bg-primary"><i class="bi bi-fire"></i></div>
+          <div class="stat-value" id="statStreak">0</div>
+          <div class="stat-label">Day Streak</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card animate-fadein" style="--delay:0.2s">
+          <div class="stat-icon bg-success"><i class="bi bi-activity"></i></div>
+          <div class="stat-value" id="statWorkouts">0</div>
+          <div class="stat-label">Workouts Done</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card animate-fadein" style="--delay:0.3s">
+          <div class="stat-icon bg-info"><i class="bi bi-droplet"></i></div>
+          <div class="stat-value" id="statWater">0</div>
+          <div class="stat-label">Avg. Water (glasses)</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card animate-fadein" style="--delay:0.4s">
+          <div class="stat-icon bg-warning"><i class="bi bi-moon"></i></div>
+          <div class="stat-value" id="statSleep">0</div>
+          <div class="stat-label">Avg. Sleep (hrs)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-8">
+        <div class="card-panel">
+          <div class="panel-header">
+            <span><i class="bi bi-bar-chart me-2"></i>Weekly Progress</span>
+          </div>
+          <div class="panel-body">
+            <canvas id="progressChart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card-panel">
+          <div class="panel-header">
+            <span><i class="bi bi-pie-chart me-2"></i>Habit Breakdown</span>
+          </div>
+          <div class="panel-body d-flex align-items-center justify-content-center">
+            <canvas id="habitChart" height="220" style="max-width:220px"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tip of the day -->
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="tip-card animate-fadein">
+          <div class="tip-icon"><i class="bi bi-lightbulb-fill"></i></div>
+          <div>
+            <div class="tip-label">Tip of the Day</div>
+            <div id="dailyTip" class="tip-text">Loading tip...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION: AI CHAT
+  ================================================================= -->
+  <section id="section-chat" class="section">
+    <div class="section-header mb-4">
+      <h2 class="section-title"><i class="bi bi-chat-dots me-2"></i>AI Fitness Coach</h2>
+      <p class="text-muted">Powered by IBM Granite — ask anything about fitness, nutrition, or wellness</p>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div class="chat-container">
+          <!-- Chat messages -->
+          <div class="chat-messages" id="chatMessages">
+            <!-- Welcome message -->
+            <div class="chat-msg bot">
+              <div class="msg-avatar"><i class="bi bi-fire"></i></div>
+              <div class="msg-bubble">
+                <strong>FitBot</strong>
+                <div class="msg-text">
+                  <p>👋 Hi! I'm <strong>FitBot</strong>, your AI-powered personal fitness coach!</p>
+                  <p>I'm built with <strong>IBM Granite</strong> via <strong>watsonx.ai</strong> and ready to help you with:</p>
+                  <ul>
+                    <li>🏋️ Personalized home workout plans</li>
+                    <li>🥗 Healthy Indian meal plans</li>
+                    <li>📊 BMI &amp; calorie calculations</li>
+                    <li>💪 Fitness tips &amp; motivation</li>
+                  </ul>
+                  <p>What's your fitness goal today?</p>
+                </div>
+                <div class="msg-time" id="welcomeTime"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick prompts -->
+          <div class="quick-prompts" id="quickPrompts">
+            <button class="prompt-chip" onclick="sendQuickPrompt('Give me a 30-min home workout for beginners')">
+              <i class="bi bi-activity"></i> Beginner Workout
+            </button>
+            <button class="prompt-chip" onclick="sendQuickPrompt('Create a healthy Indian meal plan for weight loss')">
+              <i class="bi bi-egg-fried"></i> Meal Plan
+            </button>
+            <button class="prompt-chip" onclick="sendQuickPrompt('How much water should I drink daily?')">
+              <i class="bi bi-droplet"></i> Hydration Tips
+            </button>
+            <button class="prompt-chip" onclick="sendQuickPrompt('Give me a motivational fitness quote')">
+              <i class="bi bi-star"></i> Motivation
+            </button>
+            <button class="prompt-chip" onclick="sendQuickPrompt('What are the best exercises to lose belly fat at home?')">
+              <i class="bi bi-heart-pulse"></i> Fat Loss
+            </button>
+          </div>
+
+          <!-- Chat input -->
+          <div class="chat-input-area">
+            <div class="chat-input-wrapper">
+              <textarea
+                id="chatInput"
+                class="chat-input"
+                placeholder="Ask FitBot anything — workouts, meals, tips..."
+                rows="1"
+                onkeydown="handleChatKey(event)"></textarea>
+              <button class="btn-send" id="sendBtn" onclick="sendMessage()">
+                <i class="bi bi-send-fill"></i>
+              </button>
+            </div>
+            <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION: WORKOUTS
+  ================================================================= -->
+  <section id="section-workout" class="section">
+    <div class="section-header mb-4">
+      <h2 class="section-title"><i class="bi bi-activity me-2"></i>Workout Plans</h2>
+      <p class="text-muted">AI-generated personalized home workout plans</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <!-- Workout generator -->
+      <div class="col-lg-4">
+        <div class="card-panel">
+          <div class="panel-header"><i class="bi bi-sliders me-2"></i>Customize Workout</div>
+          <div class="panel-body">
+            <div class="mb-3">
+              <label class="form-label">Fitness Level</label>
+              <select class="form-select" id="workoutLevel">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate" selected>Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Goal</label>
+              <select class="form-select" id="workoutGoal">
+                <option value="weight loss">Weight Loss</option>
+                <option value="muscle building">Muscle Building</option>
+                <option value="general fitness" selected>General Fitness</option>
+                <option value="flexibility">Flexibility</option>
+                <option value="cardio endurance">Cardio Endurance</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Duration (minutes): <span id="durationVal">30</span></label>
+              <input type="range" class="form-range" id="workoutDuration"
+                     min="15" max="60" step="5" value="30"
+                     oninput="document.getElementById('durationVal').textContent=this.value" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Health Conditions (optional)</label>
+              <input type="text" class="form-control" id="workoutConditions"
+                     placeholder="e.g. knee pain, back issues" />
+            </div>
+            <button class="btn btn-primary w-100" onclick="generateWorkout()">
+              <i class="bi bi-lightning-fill me-2"></i>Generate Workout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workout result -->
+      <div class="col-lg-8">
+        <div class="card-panel h-100">
+          <div class="panel-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-list-check me-2"></i>Your Workout Plan</span>
+            <button class="btn btn-sm btn-outline-secondary" id="copyWorkoutBtn"
+                    onclick="copyToClipboard('workoutResult')" style="display:none">
+              <i class="bi bi-clipboard me-1"></i>Copy
+            </button>
+          </div>
+          <div class="panel-body">
+            <div id="workoutResult" class="content-output">
+              <div class="empty-state">
+                <i class="bi bi-activity"></i>
+                <p>Configure your preferences and click <strong>Generate Workout</strong></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sample workout cards -->
+    <div class="row g-3">
+      <div class="col-12"><h5 class="text-muted mb-2">Quick Workouts</h5></div>
+      <div class="col-6 col-md-3">
+        <div class="workout-card" onclick="quickWorkout('5-min morning stretch')">
+          <div class="workout-card-icon"><i class="bi bi-sunrise"></i></div>
+          <div class="workout-card-title">Morning Stretch</div>
+          <div class="workout-card-meta">5 min · All levels</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="workout-card" onclick="quickWorkout('20-min HIIT cardio')">
+          <div class="workout-card-icon"><i class="bi bi-lightning"></i></div>
+          <div class="workout-card-title">HIIT Cardio</div>
+          <div class="workout-card-meta">20 min · Intermediate</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="workout-card" onclick="quickWorkout('Surya Namaskar yoga flow')">
+          <div class="workout-card-icon"><i class="bi bi-sun"></i></div>
+          <div class="workout-card-title">Surya Namaskar</div>
+          <div class="workout-card-meta">15 min · All levels</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="workout-card" onclick="quickWorkout('30-min strength training bodyweight')">
+          <div class="workout-card-icon"><i class="bi bi-trophy"></i></div>
+          <div class="workout-card-title">Strength Training</div>
+          <div class="workout-card-meta">30 min · Advanced</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION: NUTRITION
+  ================================================================= -->
+  <section id="section-nutrition" class="section">
+    <div class="section-header mb-4">
+      <h2 class="section-title"><i class="bi bi-egg-fried me-2"></i>Nutrition & Meal Plans</h2>
+      <p class="text-muted">Healthy Indian meal plans powered by AI</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <!-- Meal plan generator -->
+      <div class="col-lg-4">
+        <div class="card-panel">
+          <div class="panel-header"><i class="bi bi-sliders me-2"></i>Plan Your Meals</div>
+          <div class="panel-body">
+            <div class="mb-3">
+              <label class="form-label">Goal</label>
+              <select class="form-select" id="mealGoal">
+                <option value="weight loss">Weight Loss</option>
+                <option value="muscle building">Muscle Building / Bulking</option>
+                <option value="maintenance" selected>Maintenance</option>
+                <option value="clean eating">Clean Eating</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Diet Preference</label>
+              <select class="form-select" id="mealDiet">
+                <option value="vegetarian" selected>Vegetarian</option>
+                <option value="vegan">Vegan</option>
+                <option value="non-vegetarian">Non-Vegetarian</option>
+                <option value="eggetarian">Eggetarian</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Daily Calories Target</label>
+              <input type="number" class="form-control" id="mealCalories"
+                     value="1800" min="1200" max="3500" step="50" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Allergies / Avoid</label>
+              <input type="text" class="form-control" id="mealAvoid"
+                     placeholder="e.g. gluten, dairy, peanuts" />
+            </div>
+            <button class="btn btn-success w-100" onclick="generateMealPlan()">
+              <i class="bi bi-magic me-2"></i>Generate Meal Plan
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meal plan result -->
+      <div class="col-lg-8">
+        <div class="card-panel h-100">
+          <div class="panel-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-journal-check me-2"></i>Your Meal Plan</span>
+            <button class="btn btn-sm btn-outline-secondary" id="copyMealBtn"
+                    onclick="copyToClipboard('mealResult')" style="display:none">
+              <i class="bi bi-clipboard me-1"></i>Copy
+            </button>
+          </div>
+          <div class="panel-body">
+            <div id="mealResult" class="content-output">
+              <div class="empty-state">
+                <i class="bi bi-egg-fried"></i>
+                <p>Set your preferences and click <strong>Generate Meal Plan</strong></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Macro breakdown cards -->
+    <div class="row g-3">
+      <div class="col-12"><h5 class="text-muted mb-2">Macronutrient Guide</h5></div>
+      <div class="col-md-4">
+        <div class="macro-card protein">
+          <div class="macro-icon"><i class="bi bi-egg"></i></div>
+          <div class="macro-name">Protein</div>
+          <div class="macro-val">1.6–2.2 g/kg body weight</div>
+          <div class="macro-sources">Dal, Paneer, Eggs, Chicken, Soya</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="macro-card carbs">
+          <div class="macro-icon"><i class="bi bi-basket"></i></div>
+          <div class="macro-name">Carbohydrates</div>
+          <div class="macro-val">45–65% of daily calories</div>
+          <div class="macro-sources">Roti, Brown Rice, Oats, Millet</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="macro-card fats">
+          <div class="macro-icon"><i class="bi bi-droplet-half"></i></div>
+          <div class="macro-name">Healthy Fats</div>
+          <div class="macro-val">20–35% of daily calories</div>
+          <div class="macro-sources">Nuts, Seeds, Ghee, Avocado</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION: TOOLS (BMI + Calories)
+  ================================================================= -->
+  <section id="section-tools" class="section">
+    <div class="section-header mb-4">
+      <h2 class="section-title"><i class="bi bi-calculator me-2"></i>Fitness Tools</h2>
+      <p class="text-muted">BMI Calculator · Daily Calorie Requirement</p>
+    </div>
+
+    <div class="row g-3">
+      <!-- BMI Calculator -->
+      <div class="col-lg-6">
+        <div class="card-panel">
+          <div class="panel-header"><i class="bi bi-person-check me-2"></i>BMI Calculator</div>
+          <div class="panel-body">
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label">Weight (kg)</label>
+                <input type="number" class="form-control" id="bmiWeight"
+                       placeholder="e.g. 70" min="20" max="300" />
+              </div>
+              <div class="col-6">
+                <label class="form-label">Height (cm)</label>
+                <input type="number" class="form-control" id="bmiHeight"
+                       placeholder="e.g. 170" min="100" max="250" />
+              </div>
+            </div>
+            <button class="btn btn-primary w-100 mb-4" onclick="calculateBMI()">
+              <i class="bi bi-calculator me-2"></i>Calculate BMI
+            </button>
+
+            <!-- BMI Result -->
+            <div id="bmiResult" style="display:none">
+              <div class="bmi-gauge-wrap">
+                <canvas id="bmiGauge" height="140"></canvas>
+              </div>
+              <div class="bmi-result-box" id="bmiResultBox">
+                <div class="bmi-value" id="bmiValue">—</div>
+                <div class="bmi-category" id="bmiCategory">—</div>
+              </div>
+              <div class="bmi-advice mt-3" id="bmiAdvice"></div>
+
+              <!-- BMI scale bar -->
+              <div class="bmi-scale mt-3">
+                <div class="scale-bar">
+                  <div class="scale-seg underweight">Under</div>
+                  <div class="scale-seg normal">Normal</div>
+                  <div class="scale-seg overweight">Over</div>
+                  <div class="scale-seg obese">Obese</div>
+                </div>
+                <div class="scale-marker" id="bmiMarker"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calorie Calculator -->
+      <div class="col-lg-6">
+        <div class="card-panel">
+          <div class="panel-header"><i class="bi bi-fire me-2"></i>Daily Calorie Calculator</div>
+          <div class="panel-body">
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="form-label">Weight (kg)</label>
+                <input type="number" class="form-control" id="calWeight"
+                       placeholder="e.g. 70" />
+              </div>
+              <div class="col-6">
+                <label class="form-label">Height (cm)</label>
+                <input type="number" class="form-control" id="calHeight"
+                       placeholder="e.g. 170" />
+              </div>
+              <div class="col-6">
+                <label class="form-label">Age</label>
+                <input type="number" class="form-control" id="calAge"
+                       placeholder="e.g. 28" min="10" max="100" />
+              </div>
+              <div class="col-6">
+                <label class="form-label">Gender</label>
+                <select class="form-select" id="calGender">
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Activity Level</label>
+                <select class="form-select" id="calActivity">
+                  <option value="sedentary">Sedentary (desk job, no exercise)</option>
+                  <option value="light">Light (1–3 days/week exercise)</option>
+                  <option value="moderate" selected>Moderate (3–5 days/week)</option>
+                  <option value="active">Active (6–7 days/week)</option>
+                  <option value="very_active">Very Active (athlete/physical job)</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-warning w-100 mb-4 text-dark" onclick="calculateCalories()">
+              <i class="bi bi-fire me-2"></i>Calculate Calories
+            </button>
+
+            <!-- Calorie Result -->
+            <div id="calResult" style="display:none">
+              <div class="calorie-cards">
+                <div class="cal-card maintenance">
+                  <div class="cal-card-icon"><i class="bi bi-shield-check"></i></div>
+                  <div class="cal-card-label">Maintenance</div>
+                  <div class="cal-card-val" id="calMaintenance">—</div>
+                  <div class="cal-card-sub">kcal/day</div>
+                </div>
+                <div class="cal-card loss">
+                  <div class="cal-card-icon"><i class="bi bi-arrow-down-circle"></i></div>
+                  <div class="cal-card-label">Weight Loss</div>
+                  <div class="cal-card-val" id="calLoss">—</div>
+                  <div class="cal-card-sub">kcal/day</div>
+                </div>
+                <div class="cal-card gain">
+                  <div class="cal-card-icon"><i class="bi bi-arrow-up-circle"></i></div>
+                  <div class="cal-card-label">Muscle Gain</div>
+                  <div class="cal-card-val" id="calGain">—</div>
+                  <div class="cal-card-sub">kcal/day</div>
+                </div>
+              </div>
+              <div class="bmr-note mt-3" id="bmrNote"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION: HABITS
+  ================================================================= -->
+  <section id="section-habits" class="section">
+    <div class="section-header mb-4">
+      <h2 class="section-title"><i class="bi bi-check2-circle me-2"></i>Daily Habit Tracker</h2>
+      <p class="text-muted">Log your workouts, water intake, sleep, and mood</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <!-- Log form -->
+      <div class="col-lg-5">
+        <div class="card-panel">
+          <div class="panel-header"><i class="bi bi-plus-circle me-2"></i>Log Today's Habits</div>
+          <div class="panel-body">
+            <!-- Date -->
+            <div class="mb-3">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" id="habitDate" />
+            </div>
+
+            <!-- Workout -->
+            <div class="mb-3">
+              <label class="form-label">Did you workout today?</label>
+              <div class="d-flex gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="workoutDone"
+                         id="workoutYes" value="true" />
+                  <label class="form-check-label" for="workoutYes">Yes 💪</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="workoutDone"
+                         id="workoutNo" value="false" checked />
+                  <label class="form-check-label" for="workoutNo">No 😴</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Water -->
+            <div class="mb-3">
+              <label class="form-label">Water glasses: <strong id="waterVal">0</strong></label>
+              <div class="water-tracker" id="waterTracker">
+                <!-- Generated by JS -->
+              </div>
+            </div>
+
+            <!-- Sleep -->
+            <div class="mb-3">
+              <label class="form-label">Sleep hours: <span id="sleepVal">7</span> hrs</label>
+              <input type="range" class="form-range" id="sleepSlider"
+                     min="3" max="12" step="0.5" value="7"
+                     oninput="document.getElementById('sleepVal').textContent=this.value" />
+            </div>
+
+            <!-- Mood -->
+            <div class="mb-3">
+              <label class="form-label">Mood</label>
+              <div class="mood-picker" id="moodPicker">
+                <button class="mood-btn active" data-mood="great" onclick="selectMood(this)">😄 Great</button>
+                <button class="mood-btn" data-mood="good" onclick="selectMood(this)">😊 Good</button>
+                <button class="mood-btn" data-mood="neutral" onclick="selectMood(this)">😐 Neutral</button>
+                <button class="mood-btn" data-mood="tired" onclick="selectMood(this)">😴 Tired</button>
+                <button class="mood-btn" data-mood="bad" onclick="selectMood(this)">😟 Bad</button>
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-100" onclick="logHabit()">
+              <i class="bi bi-save me-2"></i>Save Today's Log
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Habit history -->
+      <div class="col-lg-7">
+        <div class="card-panel h-100">
+          <div class="panel-header"><i class="bi bi-clock-history me-2"></i>Recent History</div>
+          <div class="panel-body">
+            <div id="habitHistory">
+              <div class="empty-state">
+                <i class="bi bi-journal"></i>
+                <p>No habits logged yet. Start logging to see your history!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly summary chart -->
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="card-panel">
+          <div class="panel-header"><i class="bi bi-bar-chart me-2"></i>Weekly Habit Summary</div>
+          <div class="panel-body">
+            <canvas id="habitWeekChart" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       SECTION: PROFILE
+  ================================================================= -->
+  <section id="section-profile" class="section">
+    <div class="section-header mb-4">
+      <h2 class="section-title"><i class="bi bi-person-circle me-2"></i>Your Profile</h2>
+      <p class="text-muted">Help FitBot personalize your fitness journey</p>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card-panel">
+          <div class="panel-header"><i class="bi bi-person-badge me-2"></i>Personal Information</div>
+          <div class="panel-body">
+            <form id="profileForm" onsubmit="saveProfile(event)">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" class="form-control" id="profileName"
+                         placeholder="Your name" required />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Age</label>
+                  <input type="number" class="form-control" id="profileAge"
+                         placeholder="25" min="10" max="100" required />
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Gender</label>
+                  <select class="form-select" id="profileGender" required>
+                    <option value="">Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Height (cm)</label>
+                  <input type="number" class="form-control" id="profileHeight"
+                         placeholder="170" min="100" max="250" required />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Weight (kg)</label>
+                  <input type="number" class="form-control" id="profileWeight"
+                         placeholder="70" min="20" max="300" required />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Fitness Level</label>
+                  <select class="form-select" id="profileFitnessLevel" required>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate" selected>Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Primary Fitness Goal</label>
+                  <select class="form-select" id="profileGoal" required>
+                    <option value="weight loss">Weight Loss</option>
+                    <option value="muscle building">Muscle Building</option>
+                    <option value="general fitness" selected>General Fitness</option>
+                    <option value="flexibility">Flexibility &amp; Mobility</option>
+                    <option value="cardio endurance">Cardio Endurance</option>
+                    <option value="stress relief">Stress Relief</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Diet Preference</label>
+                  <select class="form-select" id="profileDiet" required>
+                    <option value="vegetarian" selected>Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="non-vegetarian">Non-Vegetarian</option>
+                    <option value="eggetarian">Eggetarian</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Available Workout Time (min/day)</label>
+                  <select class="form-select" id="profileWorkoutTime">
+                    <option value="15">15 min</option>
+                    <option value="20">20 min</option>
+                    <option value="30" selected>30 min</option>
+                    <option value="45">45 min</option>
+                    <option value="60">60 min</option>
+                    <option value="90">90 min</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Health Conditions (if any)</label>
+                  <input type="text" class="form-control" id="profileHealth"
+                         placeholder="e.g. diabetes, knee pain, hypertension" />
+                </div>
+                <div class="col-12">
+                  <button type="submit" class="btn btn-primary btn-lg px-5">
+                    <i class="bi bi-save me-2"></i>Save Profile
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary btn-lg px-4 ms-2"
+                          onclick="clearProfile()">
+                    <i class="bi bi-trash me-2"></i>Clear
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Profile display after save -->
+            <div id="profileDisplay" style="display:none" class="mt-4">
+              <hr />
+              <h5><i class="bi bi-check-circle-fill text-success me-2"></i>Profile Saved!</h5>
+              <div class="profile-grid" id="profileGrid"></div>
+              <div class="mt-3">
+                <div class="bmi-display" id="profileBMIDisplay"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ====================================================================
+     TOAST NOTIFICATION
+===================================================================== -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="appToast" class="toast align-items-center" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMessage">Message here</div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+applications:
+- name: fitness-buddy
+  memory: 512M
+  instances: 1
+  buildpacks:
+    - python_buildpack
+  env:
+    FLASK_ENV: production
+    FLASK_DEBUG: "False"
