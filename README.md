@@ -1,5 +1,8 @@
 # 🏋️ Fitness Buddy — AI-Powered Personal Fitness Coach
 
+
+Project live link :https://fitness-five-sandy.vercel.app/
+
 > Built with **IBM Granite** models via **IBM watsonx.ai Studio** · Flask · Bootstrap 5
 
 ---
